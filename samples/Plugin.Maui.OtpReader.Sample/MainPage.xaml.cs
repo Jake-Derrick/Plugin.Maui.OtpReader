@@ -1,23 +1,31 @@
-﻿namespace Plugin.Maui.OtpReader.Sample;
+﻿using Plugin.Maui.OtpReader.Extensions;
+
+namespace Plugin.Maui.OtpReader.Sample;
 
 public partial class MainPage : ContentPage
 {
     private const string OtpRegex = @"\d{6}"; // Matches exactly 6 consecutive digits
-    private readonly IOtpReader feature;
+    private readonly IOtpReader _otpReader;
+    private readonly string? AppHash;
+    private readonly Entry[] OtpBoxes = [];
 
-    public MainPage(IOtpReader feature)
+    public MainPage(IOtpReader otpReader)
     {
         InitializeComponent();
+        SetupOtpBoxesForIos();
 
-        this.feature = feature;
+        _otpReader = otpReader;
+        OtpBoxes = [OtpBox1, OtpBox2, OtpBox3, OtpBox4, OtpBox5, OtpBox6];
 #if ANDROID
-        var hash = Platforms.Android.AppHashHelper.GetAppHash(Android.App.Application.Context);
+        // This unique app hash needs to be included in the android SMS message for the app to be able to read the message contents.
+        AppHash = Platforms.Android.AppHashHelper.GetAppHash(Android.App.Application.Context);
 #endif
     }
+
     protected override void OnAppearing()
     {
         if (DeviceInfo.Current.Platform == DevicePlatform.Android)
-            feature.OtpReceived += OnOtpReceivedFromSms;
+            _otpReader.OtpReceived += OnOtpReceivedFromSms;
 
         base.OnAppearing();
     }
@@ -25,7 +33,7 @@ public partial class MainPage : ContentPage
     protected override void OnDisappearing()
     {
         if (DeviceInfo.Current.Platform == DevicePlatform.Android)
-            feature.OtpReceived -= OnOtpReceivedFromSms;
+            _otpReader.OtpReceived -= OnOtpReceivedFromSms;
     }
 
     private void OnOtpReceivedFromSms(string? otp)
@@ -44,7 +52,7 @@ public partial class MainPage : ContentPage
     // Starts listening for an SMS message (5 minutes)
     private void StartListenerClicked(object sender, EventArgs e)
     {
-        feature.StartSmsListener(OtpRegex);
+        _otpReader.StartSmsListener(OtpRegex);
         ListenerStatus.Text = "Listening for SMS message!";
         ListenerStatus.TextColor = Colors.Green;
     }
@@ -52,16 +60,14 @@ public partial class MainPage : ContentPage
     private void OnOtpBoxTextChanged(object sender, TextChangedEventArgs e)
     {
         var currentEntry = sender as Entry;
+        var currentIndex = Array.IndexOf(OtpBoxes, currentEntry);
 
-        // If they delete an entry, move to the previous box
-        if (string.IsNullOrWhiteSpace(currentEntry?.Text))
+        // If they delete an entry, move focus to the previous box
+        if (string.IsNullOrEmpty(currentEntry?.Text))
         {
-            if (currentEntry == OtpBox1) return; // We should keep focus on the first box
-            if (currentEntry == OtpBox2) OtpBox1.Focus();
-            if (currentEntry == OtpBox3) OtpBox2.Focus();
-            if (currentEntry == OtpBox4) OtpBox3.Focus();
-            if (currentEntry == OtpBox5) OtpBox4.Focus();
-            if (currentEntry == OtpBox6) OtpBox5.Focus();
+            if (currentIndex > 0)
+                OtpBoxes[currentIndex - 1].Focus();
+
             return;
         }
 
@@ -73,23 +79,22 @@ public partial class MainPage : ContentPage
             return;
         }
 
-        // Move to the next box
-        if (currentEntry == OtpBox1) OtpBox2.Focus();
-        if (currentEntry == OtpBox2) OtpBox3.Focus();
-        if (currentEntry == OtpBox3) OtpBox4.Focus();
-        if (currentEntry == OtpBox4) OtpBox5.Focus();
-        if (currentEntry == OtpBox5) OtpBox6.Focus();
-        if (currentEntry == OtpBox6) OtpBox6.Unfocus(); // All done :)
+        // Move to the next box or unfocus if at the last box
+        (currentIndex < OtpBoxes.Length - 1 ? OtpBoxes[currentIndex + 1] : currentEntry).Focus();
     }
 
     private void SetAllOtpBoxes(string otp)
     {
-        if (otp.Length >= 1) OtpBox1.Text = otp[0].ToString();
-        if (otp.Length >= 2) OtpBox2.Text = otp[1].ToString();
-        if (otp.Length >= 3) OtpBox3.Text = otp[2].ToString();
-        if (otp.Length >= 4) OtpBox4.Text = otp[3].ToString();
-        if (otp.Length >= 5) OtpBox5.Text = otp[4].ToString();
-        if (otp.Length >= 6) OtpBox6.Text = otp[5].ToString();
+        for (int i = 0; i < otp.Length && i < OtpBoxes.Length; i++)
+        {
+            OtpBoxes[i].Text = otp[i].ToString();
+        }
+    }
+
+    private void SetupOtpBoxesForIos()
+    {
+        foreach (var otpBox in OtpBoxes)
+            otpBox.SetContentTypeAsOtp();
     }
 
     private async void SendMessageClicked(object sender, EventArgs e)
@@ -97,7 +102,7 @@ public partial class MainPage : ContentPage
         if (!Sms.Default.IsComposeSupported)
             return;
 
-        var text = "Your one time passcode is: 123456\n\n 0FxX7RvjQoB";
+        var text = $"Your one time passcode is: 123456\n\n {AppHash}";
         var message = new SmsMessage(text, "");
         await Sms.Default.ComposeAsync(message);
     }

@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Plugin.Maui.OtpReader.Sample.MainPage"
+             Title="Otp Reader Plugin">
+
+    <VerticalStackLayout Padding="10" HorizontalOptions="Center">
+        <Label Text="Start listener then send the phone a message!"/>
+        <HorizontalStackLayout Padding="10">
+            <Button Text="Start listening for SMS code" Clicked="StartListenerClicked" WidthRequest="80" />
+            <Label x:Name="ListenerStatus" Padding="10,0,0,0" VerticalOptions="Center"/>
+        </HorizontalStackLayout>
+        <HorizontalStackLayout Spacing="10" HorizontalOptions="Center" Margin="0,50,0,0">
+            <Entry x:Name="OtpBox1" HorizontalOptions="Center" VerticalOptions="Center" TextChanged="OnOtpBoxTextChanged" HorizontalTextAlignment="Center" WidthRequest="35" FontSize="20"/>
+            <Entry x:Name="OtpBox2" HorizontalOptions="Center" VerticalOptions="Center" TextChanged="OnOtpBoxTextChanged" HorizontalTextAlignment="Center" WidthRequest="35" FontSize="20"/>
+            <Entry x:Name="OtpBox3" HorizontalOptions="Center" VerticalOptions="Center" TextChanged="OnOtpBoxTextChanged" HorizontalTextAlignment="Center" WidthRequest="35" FontSize="20"/>
+            <Entry x:Name="OtpBox4" HorizontalOptions="Center" VerticalOptions="Center" TextChanged="OnOtpBoxTextChanged" HorizontalTextAlignment="Center" WidthRequest="35" FontSize="20"/>
+            <Entry x:Name="OtpBox5" HorizontalOptions="Center" VerticalOptions="Center" TextChanged="OnOtpBoxTextChanged" HorizontalTextAlignment="Center" WidthRequest="35" FontSize="20"/>
+            <Entry x:Name="OtpBox6" HorizontalOptions="Center" VerticalOptions="Center" TextChanged="OnOtpBoxTextChanged" HorizontalTextAlignment="Center" WidthRequest="35" FontSize="20"/>
+        </HorizontalStackLayout>
+
+        <VerticalStackLayout HorizontalOptions="Center" Margin="0,50,0,0">
+            <Button Text="Send SMS with Code" Clicked="SendMessageClicked" WidthRequest="100"/>
+        </VerticalStackLayout>
+    </VerticalStackLayout>
+    
+
+</ContentPage>

@@ -4,10 +4,12 @@
 `Plugin.Maui.OtpReader` provides the ability to do automatically retrieve one-time passcodes from SMS messages in .NET MAUI.
 
 ![AndroidOtpReader](https://github.com/Jake-Derrick/Plugin.Maui.OtpReader/assets/60721064/c97ed33a-ac79-4142-84ac-8daf5e891a6e)
+![IosOtpReader](https://github.com/Jake-Derrick/Plugin.Maui.OtpReader/assets/60721064/8cda704e-edff-4c18-889c-e67e80f2cd30)
 
 ## Install Plugin
 
 [![NuGet](https://img.shields.io/nuget/v/Plugin.Maui.Feature.svg?label=NuGet)](https://www.nuget.org/packages/Plugin.Maui.OtpReader/)
+
 
 Available on [NuGet](http://www.nuget.org/packages/Plugin.Maui.OtpReader).
 

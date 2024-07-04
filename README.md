@@ -20,27 +20,63 @@ Install with the dotnet CLI: `dotnet add package Plugin.Maui.OtpReader`, or thro
 
 | Platform | Minimum Version Supported |
 |----------|---------------------------|
-| iOS      | 12+ (Limited Availability)|
-| macOS    | Not Available             |
+| iOS      | 12+                       |
+| macOS    | Not Supported             |
 | Android  | 5.0 (API 21)              |
-| Windows  | Not Available             |
+| Windows  | Not Supported             |
 
 ## Usage
+#### Unfortunately, the usage between Android and iOS differs, but both can be easily implemented within the same project.</p>
 
-You can either use it as a static class, e.g.: `OtpReader.Default.StartSmsListener();` or with dependency injection: `builder.Services.AddSingleton<IOtpReader>(OtpReader.Default);`
+### iOS
+The code will be automatically parsed and displayed above the keyboard, but it cannot be auto-filled. To display the code above the keyboard, set up an Entry box using the `SetContentTypeAsOtp` extension:
+```xaml
+<Entry x:Name="OtpEntry" />
+```
+```csharp
+OtpEntry.SetContentTypeAsOtp();
+```
+Alternatively, in C#:
+```
+var OtpEntry = new Entry();
+OtpEntry.SetContentTypeAsOtp();
+```
 
-### OtpReader
+### Android
+Although setting up on Android requires a bit more work, it offers greater flexibility in handling the code.
 
-Once you have created a `OtpReader` you can interact with it in the following ways:
+You can use OtpReader as a static class, e.g., `OtpReader.Default;`, or with dependency injection: `builder.Services.AddSingleton<IOtpReader>(OtpReader.Default);`.
 
-#### Methods
+Once you have access to `OtpReader`, you can subscribe to the `OtpReceived` event, which is triggered when the SMS message is received.
+```csharp
+private readonly IOtpReader _otpReader;
+public MainPage(IOtpReader otpReader)
+{
+  _otpReader = otpReader;
+}
 
-##### `StartSmsListener(string? otpRegex = null)`
+protected override void OnAppearing()
+{
+  _otpReader.OtpReceived += OnOtpReceivedFromSms
+  base.OnAppearing();
+}
 
-Starts listening for an SMS message. This will timeout after 5 minutes if it has not received a message. The otpRegex is used to parse the code from the message. If left blank, the entire message text will be returned.
+private void OnOtpReceivedFromSms(string? otp)
+{
+  // Do something with the otp code here. For example, set an Entry's text to the otp code.
+}
 
-#### Events
+```
 
-##### `OtpReceived`
+To trigger the `OtpReceived` event, you must first call the `StartSmsListener` method to begin listening for the SMS message. The listener will timeout after 5 minutes if no message is received, so start it right before you send the SMS message. 
+You can optionally supply a regex to parse the code from the message. If no regex is supplied, the entire message contents will be returned.
 
-Occurs when a one-time password is received via SMS.
+```csharp
+private void StartListenerClicked(object sender, EventArgs e)
+{
+  var otpRegex = @"\d{6}" // Matches exactly 6 consecutive digits
+  _otpReader.StartSmsListener(OtpRegex);
+}
+```
+
+For the listener to read your SMS message, the message must contain a hash unique to your app. See Google's documentation for [computing your apps hash](https://developers.google.com/identity/sms-retriever/verify#computing_your_apps_hash_string). Alternatively, you can get your app's hash with the [AppHashHelper](samples/Plugin.Maui.OtpReader.Sample/Platforms/Android/AppHashHelper.cs) class from the sample app.

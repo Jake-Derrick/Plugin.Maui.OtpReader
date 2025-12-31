@@ -8,20 +8,86 @@ on:
   pull_request:
     branches: [ "main" ]
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
+env:
+  DOTNET_VERSION: 10.0.x
 
+jobs:
+  android:
+    name: Android build
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 10.0.x
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj','**/global.json') }}
+          restore-keys: ${{ runner.os }}-nuget-
+
+      - name: Cache dotnet workload packs
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.dotnet/packs
+            ~/.dotnet/workloads
+          key: ${{ runner.os }}-dotnet-workloads-${{ env.DOTNET_VERSION }}-${{ hashFiles('**/*.csproj','**/global.json') }}
+          restore-keys: ${{ runner.os }}-dotnet-workloads-${{ env.DOTNET_VERSION }}-
+
+      - name: Install .NET MAUI Android workload
+        run: |
+          dotnet workload restore
+          dotnet workload install maui-android --skip-manifest-update
+
+      - name: Install OpenJDK (Android builds may require Java)
+        run: sudo apt-get update && sudo apt-get install -y openjdk-11-jdk
 
       - name: Restore dependencies
         run: dotnet restore src/Plugin.Maui.OtpReader/Plugin.Maui.OtpReader.csproj
 
-      - name: Build
+      - name: Build (Android)
+        run: dotnet build src/Plugin.Maui.OtpReader/Plugin.Maui.OtpReader.csproj --no-restore -c Release
+
+  ios:
+    name: iOS build
+    runs-on: macos-latest
+    needs: android
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj','**/global.json') }}
+          restore-keys: ${{ runner.os }}-nuget-
+
+      - name: Cache dotnet workload packs
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.dotnet/packs
+            ~/.dotnet/workloads
+          key: ${{ runner.os }}-dotnet-workloads-${{ env.DOTNET_VERSION }}-${{ hashFiles('**/*.csproj','**/global.json') }}
+          restore-keys: ${{ runner.os }}-dotnet-workloads-${{ env.DOTNET_VERSION }}-
+
+      - name: Install .NET MAUI iOS workload
+        run: |
+          dotnet workload restore
+          dotnet workload install maui-ios --skip-manifest-update
+
+      - name: Restore dependencies
+        run: dotnet restore src/Plugin.Maui.OtpReader/Plugin.Maui.OtpReader.csproj
+
+      - name: Build (iOS)
         run: dotnet build src/Plugin.Maui.OtpReader/Plugin.Maui.OtpReader.csproj --no-restore -c Release

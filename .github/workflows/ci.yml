@@ -22,7 +22,7 @@ jobs:
           cache: true
 
       - name: Restore dependencies
-        run: dotnet restore src/Plugin.Maui.OtpReader.sln
+        run: dotnet restore src/Plugin.Maui.OtpReader/Plugin.Maui.OtpReader.csproj
 
       - name: Build
-        run: dotnet build src/Plugin.Maui.OtpReader.sln --no-restore -c Release
+        run: dotnet build src/Plugin.Maui.OtpReader/Plugin.Maui.OtpReader.csproj --no-restore -c Release

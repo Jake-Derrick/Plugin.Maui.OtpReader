@@ -9,7 +9,7 @@
 
 ## Install Plugin
 
-[![NuGet](https://img.shields.io/nuget/v/Plugin.Maui.Feature.svg?label=NuGet)](https://www.nuget.org/packages/Plugin.Maui.OtpReader/)
+[![NuGet](https://img.shields.io/nuget/v/Plugin.Maui.OtpReader)](https://www.nuget.org/packages/Plugin.Maui.OtpReader/)
 
 
 Available on [NuGet](http://www.nuget.org/packages/Plugin.Maui.OtpReader).
